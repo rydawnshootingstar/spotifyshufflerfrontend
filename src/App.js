@@ -70,17 +70,36 @@ class App extends Component {
 	};
 
 	getTracksFromPlaylists = authString => {
-		let allLikedTracks = this.state.likedTracks || [];
 		this.state.playlists.forEach(playlist => {
-			axios
-				.get(`https://api.spotify.com/v1/playlists/${playlist}`, { headers: { Authorization: authString } })
-				.then(res => {
-					console.log("playlist data:", res.data);
-				});
+			this.getPlaylistAt(`https://api.spotify.com/v1/playlists/${playlist}/tracks?offset=0&limit=100`, authString);
 		});
 	};
 
-	getPlaylistAt = (url, authString) => {};
+	// users with a lot of playlists may need to wait a while so that the rate limited requests can have time to resend
+	// this isn't perfect, it would probably be a better idea to send them in batches, wait a while, then send more
+	// to avoid failures in the first place
+	getPlaylistAt = (url, authString) => {
+		let allLikedTracks = this.state.likedTracks || [];
+		axios
+			.get(url, {
+				headers: { Authorization: authString }
+			})
+			.then(res => {
+				res.data.items.forEach(item => {
+					allLikedTracks.push(item.track.id);
+				});
+				if (res.data.next) {
+					this.getPlaylistAt(res.data.next, authString);
+				}
+				this.setState({ likedTracks: allLikedTracks });
+			})
+			.catch(err => {
+				if (err.response.status === 429) {
+					const waitTime = parseInt(err.response.headers["retry-after"]) * 10000 + 1000;
+					setTimeout(this.getPlaylistAt(err.request.responseURL, authString), waitTime);
+				}
+			});
+	};
 
 	async componentDidMount() {
 		let parsed = queryString.parse(window.location.search);
@@ -109,7 +128,7 @@ class App extends Component {
 	}
 	render() {
 		console.log(this.state.likedTracks.length);
-		console.log(this.state.playlists.length);
+		//console.log(this.state.playlists.length);
 		return (
 			<div className="App">
 				{this.state.user ? (
