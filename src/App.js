@@ -3,14 +3,19 @@ import "reset-css/reset.css";
 import "./App.css";
 import queryString from "query-string";
 import axios from "axios";
+import dummyData from "./dummydata";
+
+import Player from "./components/Player";
 
 // TODO: move authString to state, stop passing it
 class App extends Component {
 	constructor() {
 		super();
 		this.state = {
-			likedTracks: [],
-			playlists: []
+			likedTracks: dummyData,
+			playlists: [],
+			likedDone: true,
+			playlistsDone: true
 		};
 	}
 
@@ -46,7 +51,7 @@ class App extends Component {
 				if (res.data.next) {
 					this.getLikedAlbumsAt(res.data.next, authString);
 				}
-				this.setState({ likedTracks: allLikedTracks });
+				this.setState({ likedTracks: allLikedTracks, likedDone: true });
 			})
 			.catch(err => console.error(err));
 	};
@@ -91,7 +96,7 @@ class App extends Component {
 				if (res.data.next) {
 					this.getPlaylistAt(res.data.next, authString);
 				}
-				this.setState({ likedTracks: allLikedTracks });
+				this.setState({ likedTracks: allLikedTracks, playlistsDone: true });
 			})
 			.catch(err => {
 				if (err.response.status === 429) {
@@ -100,6 +105,8 @@ class App extends Component {
 				}
 			});
 	};
+
+	constructShufflePlaylists = () => {};
 
 	async componentDidMount() {
 		let parsed = queryString.parse(window.location.search);
@@ -115,25 +122,32 @@ class App extends Component {
 			.then(data =>
 				this.setState({
 					user: {
-						name: data.display_name
+						name: data.display_name,
+						id: data.id
 					}
 				})
 			);
 
-		this.getLikedTracksAt("https://api.spotify.com/v1/me/tracks?offset=0&limit=50", authString);
-		this.getLikedAlbumsAt("https://api.spotify.com/v1/me/albums?limit=50&offset=0", authString);
-		this.getPlaylists("https://api.spotify.com/v1/me/playlists?offset=0&limit=50", authString);
+		// this.getLikedTracksAt("https://api.spotify.com/v1/me/tracks?offset=0&limit=50", authString);
+		// this.getLikedAlbumsAt("https://api.spotify.com/v1/me/albums?limit=50&offset=0", authString);
+		// this.getPlaylists("https://api.spotify.com/v1/me/playlists?offset=0&limit=50", authString);
 
 		// TODO: change these to async, and setState HERE instead of inside the functions, aim to make these pure functions
 	}
 	render() {
-		console.log(this.state.likedTracks.length);
+		//console.log(this.state.likedTracks.length);
 		//console.log(this.state.playlists.length);
+		const { user, likedDone, playlistsDone } = this.state;
+		if (user && likedDone && playlistsDone) {
+			console.log(this.state.likedTracks);
+		}
+
 		return (
 			<div className="App">
-				{this.state.user ? (
+				{this.state.user && this.state.user.id ? (
 					<div>
-						<h1 style={{ fontSize: "54px", marginTop: "5px" }}>{this.state.user.name}'s Playlists</h1>
+						<h1 style={{ fontSize: "54px", marginTop: "5px" }}>{this.state.user.name}</h1>
+						<Player ready={this.state.playlistsDone && this.state.likedDone} tracks={this.state.likedTracks} />
 					</div>
 				) : (
 					<button
