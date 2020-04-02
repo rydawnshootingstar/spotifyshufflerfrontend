@@ -7,15 +7,17 @@ import dummyData from "./dummydata";
 
 import Player from "./components/Player";
 
+const devMode = true;
+
 // TODO: move authString to state, stop passing it
 class App extends Component {
 	constructor() {
 		super();
 		this.state = {
-			likedTracks: dummyData,
+			likedTracks: devMode ? dummyData : [],
 			playlists: [],
-			likedDone: true,
-			playlistsDone: true
+			likedDone: devMode ? true : false,
+			playlistsDone: devMode ? true : false
 		};
 	}
 
@@ -128,18 +130,19 @@ class App extends Component {
 				})
 			);
 
-		// this.getLikedTracksAt("https://api.spotify.com/v1/me/tracks?offset=0&limit=50", authString);
-		// this.getLikedAlbumsAt("https://api.spotify.com/v1/me/albums?limit=50&offset=0", authString);
-		// this.getPlaylists("https://api.spotify.com/v1/me/playlists?offset=0&limit=50", authString);
-
-		// TODO: change these to async, and setState HERE instead of inside the functions, aim to make these pure functions
+		if (!devMode) {
+			// TODO: change these to async, and setState HERE instead of inside the functions, aim to make these pure functions
+			this.getLikedTracksAt("https://api.spotify.com/v1/me/tracks?offset=0&limit=50", authString);
+			this.getLikedAlbumsAt("https://api.spotify.com/v1/me/albums?limit=50&offset=0", authString);
+			this.getPlaylists("https://api.spotify.com/v1/me/playlists?offset=0&limit=50", authString);
+		}
 	}
 	render() {
 		//console.log(this.state.likedTracks.length);
 		//console.log(this.state.playlists.length);
 		const { user, likedDone, playlistsDone } = this.state;
 		if (user && likedDone && playlistsDone) {
-			console.log(this.state.likedTracks);
+			//console.log(this.state.likedTracks);
 		}
 
 		return (
