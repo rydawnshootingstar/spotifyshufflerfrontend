@@ -3,7 +3,7 @@
 [] Search bar for current tracks so users can pick one they wanna hear
 [] Render out each track with full info
 [] Infinite scroll the tracks, loading chunks as needed
-[] Make play control buttons
+[x] Make play control buttons
 [] Make play control buttons functional
 [] Make volume slider
 [] Make volume slider functional
@@ -14,5 +14,5 @@
 [] Make a re-do button which overwrites the user's existing saved files
 [] Make a backup of a user's data they can revert to
 [] Migrate project to my own boilerplate (adding querystring and necessary stuff)
-[] Break play controls into component
+[x] Break play controls into component
 [] Break footer into component

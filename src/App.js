@@ -7,7 +7,7 @@ import dummyData from "./dummydata";
 
 import Player from "./components/Player";
 
-const devMode = true;
+const devMode = false;
 
 // TODO: move authString to state, stop passing it
 class App extends Component {
@@ -15,6 +15,7 @@ class App extends Component {
 		super();
 		this.state = {
 			likedTracks: devMode ? dummyData : [],
+			wholeSongs: [],
 			playlists: [],
 			likedDone: devMode ? true : false,
 			playlistsDone: devMode ? true : false
@@ -23,16 +24,25 @@ class App extends Component {
 
 	getLikedTracksAt = (url, authString) => {
 		let allLikedTracks = this.state.likedTracks || [];
+		let wholeSongs = this.state.wholeSongs || [];
 		axios
 			.get(url, { headers: { Authorization: authString } })
 			.then(res => {
 				res.data.items.forEach(({ track }) => {
-					allLikedTracks.push(track.id);
+					//console.log("liked track", track);
+					wholeSongs.push({
+						id: track.id,
+						title: track.name,
+						artist: track.artists[0].name,
+						duration: track.duration_ms,
+						images: track.album.images
+					});
+					//allLikedTracks.push(track.id);
 				});
 				if (res.data.next) {
 					this.getLikedTracksAt(res.data.next, authString);
 				}
-				this.setState({ likedTracks: allLikedTracks });
+				this.setState({ wholeSongs });
 			})
 			.catch(err => {
 				console.error(err);
@@ -41,19 +51,28 @@ class App extends Component {
 
 	getLikedAlbumsAt = (url, authString) => {
 		let allLikedTracks = this.state.likedTracks || [];
+		let wholeSongs = this.state.wholeSongs || [];
 		axios
 			.get(url, { headers: { Authorization: authString } })
 			.then(res => {
 				res.data.items.forEach(item => {
+					//console.log("liked album", item);
 					item.album.tracks.items.forEach(song => {
-						allLikedTracks.push(song.id);
+						console.log(song.id, song.name, song.artists[0].name, song.duration, song.images);
+						wholeSongs.push({
+							id: song.id,
+							title: song.name,
+							artist: song.artists[0].name,
+							duration: song.duration_ms,
+							images: item.album.images
+						});
 					});
 				});
 
 				if (res.data.next) {
 					this.getLikedAlbumsAt(res.data.next, authString);
 				}
-				this.setState({ likedTracks: allLikedTracks, likedDone: true });
+				this.setState({ wholeSongs, likedDone: true });
 			})
 			.catch(err => console.error(err));
 	};
@@ -87,18 +106,26 @@ class App extends Component {
 	// to avoid failures in the first place
 	getPlaylistAt = (url, authString) => {
 		let allLikedTracks = this.state.likedTracks || [];
+		let wholeSongs = this.state.wholeSongs || [];
 		axios
 			.get(url, {
 				headers: { Authorization: authString }
 			})
 			.then(res => {
-				res.data.items.forEach(item => {
-					allLikedTracks.push(item.track.id);
+				res.data.items.forEach(({ track }) => {
+					//console.log("liked playlist track", track);
+					wholeSongs.push({
+						id: track.id,
+						title: track.name,
+						artist: track.artists[0].name,
+						duration: track.duration_ms,
+						images: track.album.images
+					});
 				});
 				if (res.data.next) {
 					this.getPlaylistAt(res.data.next, authString);
 				}
-				this.setState({ likedTracks: allLikedTracks, playlistsDone: true });
+				this.setState({ wholeSongs, playlistsDone: true });
 			})
 			.catch(err => {
 				if (err.response.status === 429) {
@@ -143,6 +170,7 @@ class App extends Component {
 		const { user, likedDone, playlistsDone } = this.state;
 		if (user && likedDone && playlistsDone) {
 			//console.log(this.state.likedTracks);
+			console.log(this.state.wholeSongs.length);
 		}
 
 		return (
@@ -150,7 +178,7 @@ class App extends Component {
 				{this.state.user && this.state.user.id ? (
 					<div>
 						<h1 style={{ fontSize: "54px", marginTop: "5px" }}>{this.state.user.name}</h1>
-						<Player ready={this.state.playlistsDone && this.state.likedDone} tracks={this.state.likedTracks} />
+						<Player ready={this.state.playlistsDone && this.state.likedDone} tracks={this.state.wholeSongs} />
 					</div>
 				) : (
 					<button
