@@ -9,6 +9,25 @@ import Player from "./components/Player";
 
 const devMode = false;
 
+/*
+	true shuffle flow (40-60 client and spotify split):
+		1) generate song chunk (subset of the huge total tracks)
+		2) generate buffer of songs (5?) to load at a time and add to the user's queue
+		3) if the user skips or gets through those songs, add 5 more (check the size of the user's queue, because I don't think we can listen for skip events)
+		4) when the chunk is spent, go ahead and repeat the process
+
+	classic winamp flow (80-20 client and spotify split): 
+		1) randomize order and display to user in a library format
+		2) let them click on any song to play it on the spot, and just keep going in the randomization, popping whatever they just played and returning to their previous position in the list
+		
+	playlist generation flow (20-80 client and spotify split)
+		1) break total tracks in chunks and generate 1, 2 or however many make sense playlists (10k song limit)
+		2) add the playlists to the user's account
+		3) let the user regenerate them whenever they want (prompting them to delete any playlists they want[but highlighting any that match our naming convention])
+
+
+*/
+
 // TODO: move authString to state, stop passing it
 class App extends Component {
 	constructor() {
