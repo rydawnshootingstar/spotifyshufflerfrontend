@@ -18,7 +18,8 @@ class App extends Component {
 			wholeSongs: [],
 			playlists: [],
 			likedDone: devMode ? true : false,
-			playlistsDone: devMode ? true : false
+			playlistsDone: devMode ? true : false,
+			inProgressReqs: devMode ? false : true
 		};
 	}
 
@@ -58,7 +59,7 @@ class App extends Component {
 				res.data.items.forEach(item => {
 					//console.log("liked album", item);
 					item.album.tracks.items.forEach(song => {
-						console.log(song.id, song.name, song.artists[0].name, song.duration, song.images);
+						//console.log(song.id, song.name, song.artists[0].name, song.duration, song.images);
 						wholeSongs.push({
 							id: song.id,
 							title: song.name,
@@ -125,12 +126,18 @@ class App extends Component {
 				if (res.data.next) {
 					this.getPlaylistAt(res.data.next, authString);
 				}
-				this.setState({ wholeSongs, playlistsDone: true });
+				if (this.state.inProgressReqs == false) {
+					this.setState({ wholeSongs, playlistsDone: true });
+				}
 			})
 			.catch(err => {
 				if (err.response.status === 429) {
+					this.setState({ inProgressReqs: true });
 					const waitTime = parseInt(err.response.headers["retry-after"]) * 10000 + 1000;
-					setTimeout(this.getPlaylistAt(err.request.responseURL, authString), waitTime);
+					setTimeout(() => {
+						this.getPlaylistAt(err.request.responseURL, authString);
+						this.setState({ inProgressReqs: false });
+					}, waitTime);
 				}
 			});
 	};
@@ -152,7 +159,9 @@ class App extends Component {
 				this.setState({
 					user: {
 						name: data.display_name,
-						id: data.id
+						id: data.id,
+						accessToken,
+						authString
 					}
 				})
 			);
@@ -170,7 +179,8 @@ class App extends Component {
 		const { user, likedDone, playlistsDone } = this.state;
 		if (user && likedDone && playlistsDone) {
 			//console.log(this.state.likedTracks);
-			console.log(this.state.wholeSongs.length);
+			//console.log("total songs for this user=", this.state.wholeSongs.length);
+			console.log("this should fire once");
 		}
 
 		return (
@@ -178,7 +188,11 @@ class App extends Component {
 				{this.state.user && this.state.user.id ? (
 					<div>
 						<h1 style={{ fontSize: "54px", marginTop: "5px" }}>{this.state.user.name}</h1>
-						<Player ready={this.state.playlistsDone && this.state.likedDone} tracks={this.state.wholeSongs} />
+						<Player
+							user={this.state.user}
+							ready={this.state.playlistsDone && this.state.likedDone}
+							tracks={this.state.wholeSongs}
+						/>
 					</div>
 				) : (
 					<button

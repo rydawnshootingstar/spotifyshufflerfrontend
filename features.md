@@ -1,13 +1,13 @@
 # Features
 
 [] Search bar for current tracks so users can pick one they wanna hear
-[] Render out each track with full info
+[x] Render out each track with full info
 [] Infinite scroll the tracks, loading chunks as needed
 [x] Make play control buttons
-[] Make play control buttons functional
+[x] Make play control buttons functional
 [] Make volume slider
 [] Make volume slider functional
-[] Include track, artist, length info in the track scrapes
+[x] Include track, artist, length info in the track scrapes
 [] Add export button (playlists size limited to 10k songs)
 [] Make export button work
 [] Save song info to db matched up with user (firebase)

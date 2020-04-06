@@ -10,9 +10,9 @@ class PlaybackButtons extends Component {
 	render() {
 		return (
 			<div className={"player-controls"}>
-				<Button large icon={faBackward} />
-				<Button large icon={faPlay} />
-				<Button large icon={faForward} />
+				<Button onClick={this.props.previous} large icon={faBackward} />
+				<Button onClick={this.props.play} large icon={faPlay} />
+				<Button onClick={this.props.next} large icon={faForward} />
 			</div>
 		);
 	}
