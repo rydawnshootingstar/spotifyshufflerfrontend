@@ -25,7 +25,6 @@ const devMode = false;
 		2) add the playlists to the user's account
 		3) let the user regenerate them whenever they want (prompting them to delete any playlists they want[but highlighting any that match our naming convention])
 
-
 */
 
 // TODO: move authString to state, stop passing it
@@ -36,9 +35,11 @@ class App extends Component {
 			likedTracks: devMode ? dummyData : [],
 			wholeSongs: [],
 			playlists: [],
+			loading: true,
 			likedDone: devMode ? true : false,
 			playlistsDone: devMode ? true : false,
-			inProgressReqs: devMode ? false : true
+			inProgressReqs: devMode ? false : true,
+			isTotallyDone: false
 		};
 	}
 
@@ -92,7 +93,7 @@ class App extends Component {
 				if (res.data.next) {
 					this.getLikedAlbumsAt(res.data.next, authString);
 				}
-				this.setState({ wholeSongs, likedDone: true });
+				this.setState({ wholeSongs });
 			})
 			.catch(err => console.error(err));
 	};
@@ -145,17 +146,14 @@ class App extends Component {
 				if (res.data.next) {
 					this.getPlaylistAt(res.data.next, authString);
 				}
-				if (this.state.inProgressReqs == false) {
-					this.setState({ wholeSongs, playlistsDone: true });
-				}
+
+				this.setState({ wholeSongs });
 			})
 			.catch(err => {
 				if (err.response.status === 429) {
-					this.setState({ inProgressReqs: true });
 					const waitTime = parseInt(err.response.headers["retry-after"]) * 10000 + 1000;
 					setTimeout(() => {
 						this.getPlaylistAt(err.request.responseURL, authString);
-						this.setState({ inProgressReqs: false });
 					}, waitTime);
 				}
 			});
@@ -192,26 +190,27 @@ class App extends Component {
 			this.getPlaylists("https://api.spotify.com/v1/me/playlists?offset=0&limit=50", authString);
 		}
 	}
+
+	componentDidUpdate(prevProps, prevState) {
+		if (this.isSameLength(prevState.wholeSongs.length, this.state.wholeSongs.length)) {
+		}
+	}
+
+	isSameLength = (beforeSongs, afterSongs) => {
+		return beforeSongs.length == afterSongs.length;
+	};
+
 	render() {
 		//console.log(this.state.likedTracks.length);
 		//console.log(this.state.playlists.length);
-		const { user, likedDone, playlistsDone } = this.state;
-		if (user && likedDone && playlistsDone) {
-			//console.log(this.state.likedTracks);
-			//console.log("total songs for this user=", this.state.wholeSongs.length);
-			console.log("this should fire once");
-		}
+		const { user } = this.state;
 
 		return (
 			<div className="App">
 				{this.state.user && this.state.user.id ? (
 					<div>
 						<h1 style={{ fontSize: "54px", marginTop: "5px" }}>{this.state.user.name}</h1>
-						<Player
-							user={this.state.user}
-							ready={this.state.playlistsDone && this.state.likedDone}
-							tracks={this.state.wholeSongs}
-						/>
+						<Player user={this.state.user} tracks={this.state.wholeSongs} loading={false} />
 					</div>
 				) : (
 					<button

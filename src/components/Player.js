@@ -1,6 +1,9 @@
 import React, { Component } from "react";
 import axios from "axios";
 
+import { faPlus, faMinus, faCheck } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 import PlaybackButtons from "./PlaybackButtons";
 import SongDetail from "./SongDetail";
 
@@ -8,22 +11,33 @@ class Player extends Component {
 	state = {
 		nowPlaying: {},
 		playing: false,
-		user: this.props.user
+		user: this.props.user,
+		nextTrack: ""
 	};
 
-	playButton = () => {
+	componentDidUpdate(prevProps, prevState) {}
+
+	addTrackButton = () => {
 		const authString = this.state.user.authString;
+		const { nextTrack } = this.state;
+
 		//https://api.spotify.com/v1/me/player/devices
 
+		if (nextTrack === "") {
+			setTimeout(
+				this.addTrackButton,
+
+				1000
+			);
+		}
+
 		axios
-			.post(
-				`https://api.spotify.com/v1/me/player/queue?uri=spotify:track:${this.state.nowPlaying.id}`,
-				"noDataNecessary",
-				{
-					headers: { Authorization: authString }
-				}
-			)
-			.then(res => console.log("response from added", res));
+			.post(`https://api.spotify.com/v1/me/player/queue?uri=spotify:track:${nextTrack}`, "noDataNecessary", {
+				headers: { Authorization: authString }
+			})
+			.then(res => {
+				this.setState = { nextTrack: "" };
+			});
 	};
 
 	prevButton = () => {
@@ -46,22 +60,34 @@ class Player extends Component {
 
 	render() {
 		const { tracks, loading } = this.props;
-		console.log(this.state.nowPlaying);
+
 		return (
 			<div className={"player-container"}>
 				{this.state.nowPlaying.id && <SongDetail song={this.state.nowPlaying} />}
 				<div className={"player"}>
-					<PlaybackButtons previous={this.prevButton} next={this.nextButton} play={this.playButton} />
+					<PlaybackButtons previous={this.prevButton} next={this.nextButton} play={this.nextButton} />
 
 					{loading ? (
 						<div>loading...</div>
 					) : (
 						<div className={"track-list"}>
 							{tracks.map((track, index) => (
-								<p className={"track"} key={index} onClick={() => this.setState({ nowPlaying: track })}>
+								<p className={"track"} key={index}>
 									<span className={"track-title"}>{track.title || "no title"}</span>{" "}
 									<span className={"track-artist"}>{track.artist || "unknown artist"} </span>
 									<span className={"track-duration"}>{track.duration / 1000 / 60 || "unknown length"}</span>
+									<span>
+										{" "}
+										<FontAwesomeIcon
+											style={{ cursor: "pointer" }}
+											onClick={() => {
+												this.setState({ nowPlaying: track, nextTrack: track.id });
+
+												this.addTrackButton();
+											}}
+											icon={faPlus}
+										/>
+									</span>
 								</p>
 							))}
 						</div>
